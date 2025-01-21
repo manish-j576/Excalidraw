@@ -1,12 +1,23 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config";
+import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
+import { CreateUserSchema}  from "@repo/common/types"
 
 const app = express();
 app.use(express.json())
 
 app.post("/signup" ,  (req , res) =>{
+
+    const data = CreateUserSchema.safeParse(req.body)
+    if(!data.success){
+        res.json({
+            "message":"incorrect credientials"
+        })
+        return;
+    }
+
+
     try{
 
     
@@ -69,4 +80,6 @@ app.post("/signin" , (req , res) =>{
 app.post("/createRoom" ,middleware, (req, res) =>{
     // logic to create a room and let people join it
 })
+
+
 app.listen(3001)
