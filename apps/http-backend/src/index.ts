@@ -2,84 +2,101 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
-import { CreateUserSchema}  from "@repo/common/types"
+import { CreateUserSchema } from "@repo/common/types";
+import { prismaClient } from "@repo/db/client";
 
 const app = express();
-app.use(express.json())
+app.use(express.json());
 
-app.post("/signup" ,  (req , res) =>{
+app.post("/signup", async (req, res) => {
+  const data = CreateUserSchema.safeParse(req.body);
+  if (!data.success) {
+    res.json({
+      message: "incorrect credientials",
+    });
+    return;
+  }
 
-    const data = CreateUserSchema.safeParse(req.body)
-    if(!data.success){
+  try {
+    const firstname = req.body?.firstname;
+    const lastname = req.body?.lastname;
+    const username = req.body?.username;
+    const password = req.body?.password;
+
+    const isUser = await prismaClient.user.findFirst({
+      where: {
+        username: username,
+      },
+    });
+    if (isUser) {
+      res.json({
+        message: "User already exist",
+      });
+    } else {
+    const response = await prismaClient.user.create({
+        data: {
+          firstname,
+          lastname,
+          username,
+          password,
+        },
+      });
+      if(response){
         res.json({
-            "message":"incorrect credientials"
+            "message":"your are signed up"
         })
-        return;
+      }
+      else{
+        res.json({
+            "message":"something went wrong"
+        })
+      }
     }
+}catch(e){
+        res.send({
+          "message":"error occured"
+        })
+    }
+});
 
-
+app.post("/signin",async (req, res) => {
     try{
-
+        
+        const password = req.body?.password;
+        const username = req.body?.username;
     
-    const firstname = req.body?.firstname
-    const lastname = req.body?.lastname
-    const username = req.body?.username
-    const password = req.body?.password
-    console.log(firstname + lastname + username + password)
+  const isUser = await prismaClient.user.findFirst({
+    where: {
+      username: username,
+    },
+  });
 
+  if(!isUser){
+    res.json({
+        "message":"User Doesnt exist"
+    })    
+  }
+  if(isUser?.password===password){
+    const token = jwt.sign(
+        {
+          username,
+        },
+        JWT_SECRET
+      );
+      res.json({
+        token: token,
+        firstname : isUser?.firstname
+      });
+  }
+}catch(e){
+    res.json({
+        "message":"Error occured"
+    })
+}
 
-    // check for the user in db if already exist then send them user exist 
-    // const isUser = await UserModel.findFirst({
-    //     where : {
-    //         username : username
-    //     }
-
-    // })
-
-    // if(isUser) {
-    //     res.send({
-    //         "message":"User already exist"
-    //     })
-    // }
-    // else{
-    // const response = await UserModel.create {
-    //     data :{
-    //         firstName,
-    //         lastName,
-    //         username,
-    //         password
-    //     }
-    // }
-    //     if(response.data == "success"){
-    //         res.send({
-    //             "message":"user Created"
-    //         })
-    //     }
-    // }
-    }catch(e){
-        res.json({
-            "message" : " server error"
-        }
-        )
-    }
 })
+app.post("/createRoom", middleware, (req, res) => {
+  // logic to create a room and let people join it
+});
 
-app.post("/signin" , (req , res) =>{
-   const username = req.body?.username
-   const password = req.body?.password
-
-//    logic for the user to find the user in the db
-        const token = jwt.sign({
-            username
-        },JWT_SECRET)
-        res.json({
-            token :token
-        })
-})
-
-app.post("/createRoom" ,middleware, (req, res) =>{
-    // logic to create a room and let people join it
-})
-
-
-app.listen(3001)
+app.listen(3001);
