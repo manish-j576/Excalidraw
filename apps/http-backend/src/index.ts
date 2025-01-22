@@ -77,9 +77,11 @@ app.post("/signin",async (req, res) => {
     })    
   }
   if(isUser?.password===password){
+    const id = isUser?.id
     const token = jwt.sign(
         {
           username,
+          id
         },
         JWT_SECRET
       );
