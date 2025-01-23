@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
@@ -97,7 +97,7 @@ app.post("/signin",async (req, res) => {
 }
 
 })
-app.post("/room", middleware,async (req, res) => {
+app.post("/room", middleware,async (req : Request, res : Response) => {
 
   try{
 
@@ -109,16 +109,32 @@ app.post("/room", middleware,async (req, res) => {
     })
     return
   }
+  console.log("Conrol reach 1st end point")
   //@ts-ignore
-  const userId = req.userId;
- 
-  await prismaClient.room.create({
-    data : {
-      slug : parsedData.data.room,
-      adminId : userId
+  const userId = req.userId; 
+   // if the control reaches here mtlv it is an authenticated user aur middleware ne id daal di hogi yaha
+   console.log(userId  + typeof userId )
+
+   try{
+
+     const room = await prismaClient.room.create({
+       data : {
+         slug : parsedData.data.room, //name of the room given by the user
+         adminId : userId
+         
+        }
+      })
+      console.log("Conrol reach 3 end point")
+      res.json({
+        roomId : room.id
+      })
+    }catch(e){
+      res.json({
+        "message":"room already exist"
+      })
     }
-    
-  })
+
+
 }catch(e){
   res.json({
     "message":"error occured"
@@ -126,5 +142,30 @@ app.post("/room", middleware,async (req, res) => {
 }
 });
   
+
+app.get("/chats/:roomId",async (req,res)=>{
+
+  try{
+
+    const roomId = Number(req.params.roomId)
+    const data  = await prismaClient.chat.findMany({
+    where:{
+      roomId: roomId
+    },
+    orderBy:{
+      id:"desc"
+    },
+    take: 50
+  })
+  
+  res.json({
+    data
+  })
+}catch(e){
+  res.json({
+    "message":"error occured"
+  })
+}
+})
 
 app.listen(3001);
