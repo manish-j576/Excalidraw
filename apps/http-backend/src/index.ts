@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { middleware } from "./middleware";
-import { CreateUserSchema } from "@repo/common/types";
+import { CreateRoomSchema, CreateUserSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 
 const app = express();
@@ -97,8 +97,34 @@ app.post("/signin",async (req, res) => {
 }
 
 })
-app.post("/createRoom", middleware, (req, res) => {
-  // logic to create a room and let people join it
+app.post("/room", middleware,async (req, res) => {
+
+  try{
+
+    // logic to create a room and let people join it
+    const parsedData = CreateRoomSchema.safeParse(req.body);
+    if(!parsedData.success){
+      res.json({
+      "message":"Incorrect inputs"
+    })
+    return
+  }
+  //@ts-ignore
+  const userId = req.userId;
+ 
+  await prismaClient.room.create({
+    data : {
+      slug : parsedData.data.room,
+      adminId : userId
+    }
+    
+  })
+}catch(e){
+  res.json({
+    "message":"error occured"
+  })
+}
 });
+  
 
 app.listen(3001);
