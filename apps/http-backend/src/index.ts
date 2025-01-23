@@ -168,4 +168,22 @@ app.get("/chats/:roomId",async (req,res)=>{
 }
 })
 
+app.get("/room/:slug",async (req , res) =>{
+  try{
+    const slug = req.params.slug
+    const data = await prismaClient.room.findFirst({
+      where:{
+        slug : slug
+      }
+    })
+    res.json({
+      data
+    })
+  }catch(e){
+    res.json({
+      "message":"error occured"
+    })
+  }
+})
+
 app.listen(3001);
