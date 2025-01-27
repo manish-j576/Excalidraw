@@ -113,8 +113,6 @@ app.post("/room", middleware,async (req : Request, res : Response) => {
   //@ts-ignore
   const userId = req.userId; 
    // if the control reaches here mtlv it is an authenticated user aur middleware ne id daal di hogi yaha
-   console.log(userId  + typeof userId )
-
    try{
 
      const room = await prismaClient.room.create({
@@ -124,7 +122,6 @@ app.post("/room", middleware,async (req : Request, res : Response) => {
          
         }
       })
-      console.log("Conrol reach 3 end point")
       res.json({
         roomId : room.id
       })
@@ -155,14 +152,14 @@ app.get("/chats/:roomId",async (req,res)=>{
       id:"desc"
     },
     take: 50
-  })
+  })  
   
   res.json({
     messages
   })
 }catch(e){
   res.json({
-    "message":"error occured"
+    messages : []
   })
 }
 })

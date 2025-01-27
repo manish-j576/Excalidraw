@@ -16,6 +16,6 @@ export default async function ChatRoom1({params}:{
 
     const slug = (await params).slug
     const roomId = await getRoomId(slug)
-    
+    //@ts-ignore
     return <ChatRoom id={roomId}></ChatRoom>
 }

@@ -6,6 +6,7 @@ export default function Home() {
   const inputRef = useRef();
   const router = useRouter();
   function onClickHandler(){
+    //@ts-ignore
     const value = inputRef.current?.value;
     router.push(`/room/${value}`)
   }
